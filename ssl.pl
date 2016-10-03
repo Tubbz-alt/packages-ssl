@@ -37,6 +37,7 @@
           [ evp_decrypt/6,              % +CipherText, +Algorithm, +Key, +IV, -PlainText, +Options
             evp_encrypt/6,              % +PlainText, +Algorithm, +Key, +IV, -CipherText, +Options
             load_certificate/2,         % +Stream, -Certificate
+            load_certificate/3,         % +Stream, -Certificate, +Options
             load_private_key/3,         % +Stream, +Password, -Key
             load_public_key/2,          % +Stream, -Key
             load_crl/2,                 % +Stream, -Crl
@@ -296,7 +297,14 @@ ssl_context(Role, SSL, Module:Options) :-
 %	  is the default for newer versions of OpenSSL), this data will
 %	  not actually be sent to the server.
 
-%%	load_certificate(+Stream, -Certificate) is det.
+%%      load_certificate(+Stream, -Certificate) is det.
+%       Equivalent to load_certificate(Stream, Certificate, []).
+
+load_certificate(Stream, Certificate):-
+        load_certificate(Stream, Certificate, []).
+
+
+%%	load_certificate(+Stream, -Certificate, +Options) is det.
 %
 %	Loads a certificate from a PEM- or DER-encoded stream, returning
 %	a term which will unify with   the same certificate if presented
@@ -320,6 +328,14 @@ ssl_context(Role, SSL, Module:Options) :-
 %		    at_end_of_stream(In), !
 %		).
 %	  ==
+%
+%       Options:
+%
+%	  - base64_newline(+RequireNewlines)
+%	  Some versions of OpenSSL require that base64 strings contain no
+%	  more than 80 characters before a newline. Setting this option
+%         to false will disable this behaviour. The default is true, which
+%         will give you the default behaviour for your version of OpenSSL.
 
 %%	load_crl(+Stream, -CRL) is det.
 %

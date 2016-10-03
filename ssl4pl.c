@@ -87,6 +87,7 @@ static atom_t ATOM_none;
 static atom_t ATOM_block;
 static atom_t ATOM_encoding;
 static atom_t ATOM_padding;
+static atom_t ATOM_base64_newline;
 
 static functor_t FUNCTOR_unsupported_hash_algorithm1;
 static functor_t FUNCTOR_system1;
@@ -941,8 +942,34 @@ pl_load_crl(term_t source, term_t list)
   return result;
 }
 
+static int
+set_bio_options(BIO* bio, term_t Options)
+{ term_t head = PL_new_term_ref();
+  term_t tail = PL_copy_term_ref(Options);
+  while( PL_get_list_ex(tail, head, tail) )
+  { atom_t name;
+    size_t arity;
+    term_t arg = PL_new_term_ref();
+
+    if ( !PL_get_name_arity(head, &name, &arity) ||
+         arity != 1 ||
+         !PL_get_arg(1, head, arg) )
+    return PL_type_error("option", head);
+    if ( name == ATOM_base64_newline )
+    { int i;
+      if (!PL_get_bool_ex(arg, &i))
+        return FALSE;
+      if (!i)
+        BIO_set_flags(bio,BIO_FLAGS_BASE64_NO_NL);
+    }
+  }
+  if ( !PL_get_nil_ex(tail) )
+      return FALSE;
+  return TRUE;
+}
+
 static foreign_t
-pl_load_certificate(term_t source, term_t cert)
+pl_load_certificate(term_t source, term_t cert, term_t Options)
 { X509* x509;
   BIO* bio;
   IOSTREAM* stream;
@@ -951,6 +978,11 @@ pl_load_certificate(term_t source, term_t cert)
   if ( !PL_get_stream_handle(source, &stream) )
     return FALSE;
   bio = BIO_new(&bio_read_functions);
+  if (!set_bio_options(bio, Options))
+  { BIO_free(bio);
+    PL_release_stream(stream);
+    return FALSE;
+  }
   BIO_set_ex_data(bio, 0, stream);
   /* Determine format */
   c = Speekcode(stream);
@@ -2169,6 +2201,7 @@ install_ssl4pl(void)
   ATOM_block	          = PL_new_atom("block");
   ATOM_encoding	          = PL_new_atom("encoding");
   ATOM_padding	          = PL_new_atom("padding");
+  ATOM_base64_newline     = PL_new_atom("base64_newline");
 
   FUNCTOR_error2          = PL_new_functor(PL_new_atom("error"), 2);
   FUNCTOR_ssl_error4      = PL_new_functor(PL_new_atom("ssl_error"), 4);
@@ -2212,7 +2245,7 @@ install_ssl4pl(void)
   PL_register_foreign("ssl_peer_certificate",
 					2, pl_ssl_peer_certificate, 0);
   PL_register_foreign("load_crl",       2, pl_load_crl,      0);
-  PL_register_foreign("load_certificate",2,pl_load_certificate,      0);
+  PL_register_foreign("load_certificate",3,pl_load_certificate,      0);
   PL_register_foreign("load_private_key",3,pl_load_private_key,      0);
   PL_register_foreign("load_public_key", 2,pl_load_public_key,      0);
   PL_register_foreign("rsa_private_decrypt", 4, pl_rsa_private_decrypt, 0);

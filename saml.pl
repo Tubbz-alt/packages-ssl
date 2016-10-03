@@ -41,6 +41,7 @@
 :- use_module(library(zlib)).
 :- use_module(library(xmldsig)).
 :- use_module(library(xmlenc)).
+:- use_module(library(ssl)).
 :- use_module(library(http/http_path)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_client)).
@@ -130,7 +131,7 @@ read_certificate(Spec, Certificate, PEMData):-
                            read_string(Stream1, _, PEMData),
                            close(Stream1)),
         setup_call_cleanup(open_string(PEMData, Stream2),
-                           load_certificate(Stream2, Certificate),
+                           load_certificate(Stream2, Certificate, [base64_newline(false)]),
                            close(Stream2)).
 
 open_spec(Spec, Stream):-
@@ -198,7 +199,7 @@ idp_certificate(IDPSSODescriptor, CertificateUse, Certificate):-
         normalize_space(string(TrimmedCertificate), X509CertificateData),
         format(string(CompleteCertificate), '-----BEGIN CERTIFICATE-----\n~s\n-----END CERTIFICATE-----', [TrimmedCertificate]),
         setup_call_cleanup(open_string(CompleteCertificate, StringStream),
-                           load_certificate(StringStream, Certificate),
+                           load_certificate(StringStream, Certificate, [base64_newline(false)]),
                            close(StringStream)).
 
 

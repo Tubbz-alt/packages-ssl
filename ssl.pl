@@ -58,6 +58,14 @@
 :- use_module(library(option)).
 :- use_module(library(debug)).
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   Loading library(crypto) makes OpenSSL thread-safe in OpenSSL < 1.1.0.
+   We rely on thread-safe Prolog module loading to guarantee that
+   the library is initialized precisely once.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+:- use_module(library(crypto)).
+
 :- use_foreign_library(foreign(ssl4pl)).
 
 :- meta_predicate

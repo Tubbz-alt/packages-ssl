@@ -1668,11 +1668,6 @@ ssl_lib_init(void)
     }
 #endif
 
-    /*
-     * Initialize crypto library
-     */
-    crypto_lib_init();
-
     return 0;
 }
 

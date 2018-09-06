@@ -95,6 +95,14 @@ endif()
 
 configure_file(config.h.cmake config.h)
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_certs
+    COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR}/tests &&
+	    bash mkcerts.sh > /dev/null 2>&1)
+add_custom_target(
+    test_certificates ALL
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_certs)
+
 swipl_plugin(
     ssl4pl
     C_SOURCES ssl4pl.c ../clib/nonblockio.c ../clib/error.c
@@ -107,5 +115,10 @@ swipl_plugin(
     PL_LIBS crypto.pl)
 
 swipl_examples(client.pl server.pl https.pl)
+
+test_libs(
+    ssl
+    PACKAGES clib sgml http
+)
 
 endif(OPENSSL_FOUND)

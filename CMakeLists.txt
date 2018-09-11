@@ -116,6 +116,10 @@ swipl_plugin(
 
 swipl_examples(client.pl server.pl https.pl)
 
+install(DIRECTORY etc
+	DESTINATION
+	${SWIPL_INSTALL_PREFIX}/doc/packages/examples/${SWIPL_PKG})
+
 test_libs(
     ssl
     PACKAGES clib sgml http

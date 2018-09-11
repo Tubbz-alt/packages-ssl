@@ -117,6 +117,9 @@ swipl_plugin(
     ssl_http_plugin
     PL_LIB_SUBDIR http
     PL_LIBS http_ssl_plugin.pl)
+swipl_plugin(
+    saml
+    PL_LIBS saml.pl xmldsig.pl xmlenc.pl)
 
 swipl_examples(client.pl server.pl https.pl)
 

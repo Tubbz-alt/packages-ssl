@@ -113,6 +113,10 @@ swipl_plugin(
     C_SOURCES crypto4pl.c ../clib/nonblockio.c ../clib/error.c
     C_LIBS ${OPENSSL_CRYPTO_LIBRARY}
     PL_LIBS crypto.pl)
+swipl_plugin(
+    ssl_http_plugin
+    PL_LIB_SUBDIR http
+    PL_LIBS http_ssl_plugin.pl)
 
 swipl_examples(client.pl server.pl https.pl)
 

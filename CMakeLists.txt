@@ -132,4 +132,12 @@ test_libs(
     PACKAGES clib sgml http
 )
 
+pkg_doc(ssl
+	SOURCE
+	    cryptolib.md crypto.tex --lib=crypto --module=crypto
+	SECTION
+	    SOURCE ssl.pl ssllib.tex
+	SUBSECTION
+	    saml.pl xmldsig.pl xmlenc.pl)
+
 endif(OPENSSL_FOUND)

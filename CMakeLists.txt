@@ -132,9 +132,18 @@ test_libs(
     PACKAGES clib sgml http
 )
 
+# cryptolib.tex is created using the main manual libttotex.pl
+# FIXME: Merge into packages/pltotex.pl
+add_custom_command(
+    OUTPUT  cryptolib.tex
+    COMMAND ${LIBTOTEX} --lib=crypto --module=crypto
+	    --outdir=${CMAKE_CURRENT_BINARY_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/cryptolib.md
+    DEPENDS cryptolib.md crypto.pl)
+
 pkg_doc(ssl
-	SOURCE
-	    cryptolib.md crypto.tex --lib=crypto --module=crypto
+	SOURCES
+	    crypto.doc cryptolib.tex
 	SECTION
 	    SOURCE ssl.pl ssllib.tex
 	SUBSECTION

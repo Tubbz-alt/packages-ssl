@@ -113,6 +113,13 @@ swipl_plugin(
     C_SOURCES crypto4pl.c ../clib/nonblockio.c ../clib/error.c
     C_LIBS ${OPENSSL_CRYPTO_LIBRARY}
     PL_LIBS crypto.pl)
+target_include_directories(
+    plugin_ssl4pl BEFORE PRIVATE
+    ${OPENSSL_INCLUDE_DIR})
+target_include_directories(
+    plugin_crypto4pl BEFORE PRIVATE
+    ${OPENSSL_INCLUDE_DIR})
+
 swipl_plugin(
     ssl_http_plugin
     PL_LIB_SUBDIR http

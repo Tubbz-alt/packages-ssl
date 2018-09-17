@@ -805,6 +805,10 @@ unify_private_key(EVP_PKEY* key, term_t item)
 #define X509_get0_notAfter(C) X509_get_notAfter(C)
 #endif
 
+#ifndef GET0SIG_CONST_T
+#define GET0SIG_CONST_T
+#endif
+
 static int
 unify_certificate(term_t cert, X509* data)
 { term_t list = PL_copy_term_ref(cert);
@@ -2134,40 +2138,6 @@ ssl_init(PL_SSL_ROLE role, const SSL_METHOD *ssl_method)
 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Extract   the   system   certificate   file   from   the   Prolog   flag
-system_cacert_filename
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-
-static const char *
-system_cacert_filename(void)
-{ fid_t fid;
-  static char *cacert_filename = NULL;
-
-  if ( !cacert_filename )
-  { if ( (fid = PL_open_foreign_frame()) )
-    { term_t av = PL_new_term_refs(2);
-      PL_put_atom_chars(av+0, "system_cacert_filename");
-
-      if ( PL_call_predicate(NULL, PL_Q_NORMAL,
-                             PL_predicate("current_prolog_flag", 2, "system"),
-                             av) )
-      { char *s;
-
-        if ( PL_get_atom_chars(av+1, &s) )
-        { char *old = cacert_filename;
-          cacert_filename = strdup(s);
-          free(old);
-        }
-      }
-
-      PL_close_foreign_frame(fid);
-    }
-  }
-
-  return cacert_filename;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ssl_system_verify_locations() adds trusted  root   certificates  from OS
 dependent locations if cacert_file(system(root_certificates)) is passed.
 
@@ -2249,6 +2219,7 @@ ssl_system_verify_locations(void)
     CFRelease(keychain);
   }
 #else
+#define USES_SYSTEM_CACERT_FILENAME 1
 { const char *cacert_filename;
   if ( (cacert_filename = system_cacert_filename()) )
   { X509 *cert = NULL;
@@ -2277,6 +2248,42 @@ ssl_system_verify_locations(void)
   }
 }
 
+
+#ifdef USES_SYSTEM_CACERT_FILENAME
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Extract   the   system   certificate   file   from   the   Prolog   flag
+system_cacert_filename
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+static const char *
+system_cacert_filename(void)
+{ fid_t fid;
+  static char *cacert_filename = NULL;
+
+  if ( !cacert_filename )
+  { if ( (fid = PL_open_foreign_frame()) )
+    { term_t av = PL_new_term_refs(2);
+      PL_put_atom_chars(av+0, "system_cacert_filename");
+
+      if ( PL_call_predicate(NULL, PL_Q_NORMAL,
+                             PL_predicate("current_prolog_flag", 2, "system"),
+                             av) )
+      { char *s;
+
+        if ( PL_get_atom_chars(av+1, &s) )
+        { char *old = cacert_filename;
+          cacert_filename = strdup(s);
+          free(old);
+        }
+      }
+
+      PL_close_foreign_frame(fid);
+    }
+  }
+
+  return cacert_filename;
+}
+#endif /*USES_SYSTEM_CACERT_FILENAME*/
 
 static STACK_OF(X509) *
 system_root_certificates(void)

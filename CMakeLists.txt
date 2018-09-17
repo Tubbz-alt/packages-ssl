@@ -8,8 +8,15 @@ include(Sockets)
 
 find_package(OpenSSL)
 if(OPENSSL_FOUND)
-set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES} ${OPENSSL_LIBRARIES})
-set(CMAKE_REQUIRED_INCLUDES  ${CMAKE_REQUIRED_INCLUDES}  ${OPENSSL_INCLUDE_DIR})
+message("OpenSSL: ${OPENSSL_LIBRARIES} ${OPENSSL_INCLUDE_DIR}")
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES}
+    ${OPENSSL_LIBRARIES} ${OPENSSL_CRYPTO_LIBRARY})
+if(APPLE)
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES}
+    "-framework CoreFoundation" "-framework Security")
+endif()
+set(CMAKE_REQUIRED_INCLUDES  ${CMAKE_REQUIRED_INCLUDES}
+    ${OPENSSL_INCLUDE_DIR})
 
 AC_CHECK_HEADERS(unistd.h sys/types.h sys/time.h sys/select.h fcntl.h
 		 Security/Security.h)
@@ -18,8 +25,7 @@ check_c_source_compiles(
     "#include <sys/types.h>
      #include <Security/Security.h>
 
-     const void *key = kSecClass;
-     int main() { return 0;}"
+     int main() { const void *key = kSecClass; return 0; }"
     HAVE_KSECCLASS)
 
 AC_CHECK_FUNCS(timegm ERR_remove_state ERR_remove_thread_state)
@@ -106,13 +112,19 @@ add_custom_target(
 swipl_plugin(
     ssl4pl
     C_SOURCES ssl4pl.c ../clib/nonblockio.c ../clib/error.c
-    C_LIBS ${OPENSSL_SSL_LIBRARY}
+    C_LIBS ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}
     PL_LIBS ssl.pl)
 swipl_plugin(
     crypto4pl
     C_SOURCES crypto4pl.c ../clib/nonblockio.c ../clib/error.c
     C_LIBS ${OPENSSL_CRYPTO_LIBRARY}
     PL_LIBS crypto.pl)
+if(APPLE)
+target_link_libraries(
+    plugin_ssl4pl
+    "-framework CoreFoundation"
+    "-framework Security")
+endif()
 target_include_directories(
     plugin_ssl4pl BEFORE PRIVATE
     ${OPENSSL_INCLUDE_DIR})
@@ -138,6 +150,10 @@ test_libs(
     ssl
     PACKAGES clib sgml http
 )
+
+add_compile_options(-D__SWI_PROLOG__ 
+		    -DSERVER_CERT_REQUIRED=TRUE
+		    -DCLIENT_CERT_REQUIRED=TRUE)
 
 # cryptolib.tex is created using the main manual libttotex.pl
 # FIXME: Merge into packages/pltotex.pl

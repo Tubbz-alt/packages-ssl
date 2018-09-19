@@ -143,6 +143,8 @@ target_include_directories(
     plugin_crypto4pl BEFORE PRIVATE
     ${OPENSSL_INCLUDE_DIR})
 
+install_dll(${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY})
+
 swipl_plugin(
     ssl_http_plugin
     PL_LIB_SUBDIR http

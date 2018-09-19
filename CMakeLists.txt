@@ -8,6 +8,13 @@ include(Sockets)
 
 find_package(OpenSSL)
 if(OPENSSL_FOUND)
+
+if(WIN32)
+set(OPENSSL_OS_LIBS ws2_32.lib gdi32.lib crypt32.lib)
+else()
+set(OPENSSL_OS_LIBS)
+endif()
+
 set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES}
     ${OPENSSL_LIBRARIES} ${OPENSSL_CRYPTO_LIBRARY})
 if(APPLE)
@@ -116,12 +123,12 @@ add_custom_target(
 swipl_plugin(
     ssl4pl
     C_SOURCES ssl4pl.c ../clib/nonblockio.c ../clib/error.c
-    C_LIBS ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY}
+    C_LIBS ${OPENSSL_SSL_LIBRARY} ${OPENSSL_CRYPTO_LIBRARY} ${OPENSSL_OS_LIBS}
     PL_LIBS ssl.pl)
 swipl_plugin(
     crypto4pl
     C_SOURCES crypto4pl.c ../clib/nonblockio.c ../clib/error.c
-    C_LIBS ${OPENSSL_CRYPTO_LIBRARY}
+    C_LIBS ${OPENSSL_CRYPTO_LIBRARY} ${OPENSSL_OS_LIBS}
     PL_LIBS crypto.pl)
 if(APPLE)
 target_link_libraries(
@@ -155,7 +162,7 @@ test_libs(
     PACKAGES clib sgml http
 )
 
-add_compile_options(-D__SWI_PROLOG__ 
+add_compile_options(-D__SWI_PROLOG__
 		    -DSERVER_CERT_REQUIRED=TRUE
 		    -DCLIENT_CERT_REQUIRED=TRUE)
 
